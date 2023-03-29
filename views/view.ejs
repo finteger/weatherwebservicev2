@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather Service</title>
+  
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1 class="mt-3"><img id="logo" src="/images/download.png"><img>Weather Service</h1>
+    <div class="row mt-3">
+      <% weatherData.forEach((data) => { %>
+        <div class="col-md-4">
+          <div class="card" style="background-image:url('/images/<%= data.city.toLowerCase() %>.jpg');background-position:right;transition: background 300ms ease-in 200ms;">
+            <div class="card-header">
+              <%= data.city %>
+            </div>
+            <div class="card-body">
+              <h5 class="card-title"><%= data.temperature %>°C</h5>
+              <% if (data.temperature < 10) { %>
+                <i class="fas fa-snowflake fa-5x"></i>
+              <% } else if (data.temperature > 25) { %>
+                <i class="fas fa-sun fa-5x"></i>
+              <% } else { %>
+                <i class="fas fa-cloud fa-5x"></i>
+              <% } %>
+              <p class="card-text">Humidity: <%= data.humidity %>%</p>
+            </div>
+          </div>
+        
+          <canvas id="myChart"></canvas>
+      
+        </div>
+      <% }) %>
+    </div>
+  </div>
+  
+  <script>
+    // Get the weatherData from the server
+    const weatherData = JSON.parse('<%- JSON.stringify(weatherData) %>');
+    
+    // Extract the temperatures and cities
+    const temperatures = weatherData.map(data => data.temperature);
+    const cities = weatherData.map(data => data.city);
+    
+    // Create a new Chart object
+    const ctx = document.getElementById('myChart').getContext('2d');
+    const myChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: cities,
+        datasets: [{
+          label: 'Temperature',
+          data: temperatures,
+          
+                strokeColor : "rgba(51, 51, 51, 1)",
+                pointColor : "rgba(255, 89, 114, 1)",
+                pointStrokeColor : "#fff",
+                pointHighlightFill : "#fff",
+                pointHighlightStroke : "rgba(151,187,205,1)",
+                maintainAspectRatio: false,
+                scaleFontColor: "#FFFFFF",
+                pointLabelFontColor : "#FFFFFF",
+                pointLabelFontSize : 30,
+          
+        }]
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
