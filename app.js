@@ -11,6 +11,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
+const multer = require('multer');
+const fs = require('fs');
 const secretKey = 'secret_key';
 const saltRounds = 10;
 
@@ -62,6 +64,46 @@ mongoose.connect(url,connectionParams)
 );
 
 
+//set storage
+var storage = multer.diskStorage({
+    destination: function(req, file, cb) {
+        cb(null, 'uploads');
+    },
+    filename: function(req, file, cb){
+        cb(null, file.fieldname + '-' + Date.now())
+    }
+});
+
+var upload = multer({storage: storage});
+
+
+//Post route to read file, convert the img to a string, save img to database
+
+app.post('/uploadphoto', upload.single('myImage'), (req, res) =>{
+ var img = fs.readFileSync(req.file.path);
+ var encode_img = img.toString('base64');
+ var final_img = {
+    contentType: req.file.mimetype,
+    data: new Buffer.from(encode_img, 'base64')
+ };
+
+
+//Save weather image upload
+
+const image = new Image({
+    name: req.body.name,
+    desc: req.file.desc,
+    img: final_img,
+    
+});
+
+image.save();
+
+});
+
+
+
+
 //High level middleware function that verifies jwt.  Authorized access if session info matches decoded token info.
 function authenticateToken(req, res, next){
  const token = req.cookies.jwt;
@@ -81,7 +123,6 @@ function authenticateToken(req, res, next){
  } else {
     res.status(401).send('You are not authorized to access this page.');
  }
- 
 }
 
 
@@ -118,24 +159,22 @@ try {
     res.status(500).send('An error occurred while saving weather data.');
 }
 
-//Save weather image upload
-const image = new Image({
-
-    img: req.body.image,
-
-});
-
-image.save();
-
 });
 
 
 //Route to display all weather data in HTML by passing data variables
-app.get('/view', authenticateToken, async (req, res) =>{
+app.get('/view', async (req, res) =>{
 
     try {
+
+        const images = await Image.find();
+
         const weatherData = await Weather.find();
-        res.render('view.ejs', { weatherData });
+
+        res.render('view.ejs', { weatherData, images });
+
+
+
     } catch (error) {
         console.error(error);
         res.status(500).send('An error occurred while retrieving weather data.');
@@ -150,6 +189,21 @@ app.get('/api/all', async (req, res) =>{
     try {
         const weatherData = await Weather.find();
         res.json(weatherData);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('An error occurred while retrieving weather data.');
+    }
+
+});
+
+
+//Route to display all weather images
+app.get('/api/images', async (req, res) => {
+
+    try {
+   
+
+   
     } catch (error) {
         console.error(error);
         res.status(500).send('An error occurred while retrieving weather data.');
@@ -277,5 +331,4 @@ const port = process.env.PORT || 3000;
 app.listen(port, () => {
 console.log(`Weather service listening on port ${port}`);
 });
-
 
