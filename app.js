@@ -169,9 +169,11 @@ app.get('/view', async (req, res) =>{
 
         const images = await Image.find();
 
+        const image = images[0].img.data;
+    
         const weatherData = await Weather.find();
 
-        res.render('view.ejs', { weatherData, images });
+        res.render('view.ejs', { weatherData, image });
 
 
 
@@ -201,7 +203,13 @@ app.get('/api/all', async (req, res) =>{
 app.get('/api/images', async (req, res) => {
 
     try {
-   
+
+    const images = await Image.find();
+    const individualImage = images.map(images => {
+
+     res.header('Content-Type', images.img.contentType).send(images.img.data);
+     
+    });
 
    
     } catch (error) {
