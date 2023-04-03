@@ -10,6 +10,7 @@ const ejs = require('ejs');
 const Joi = require('joi');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const mcache = require('memory-cache');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const multer = require('multer');
@@ -162,6 +163,30 @@ function authenticateToken(req, res, next){
 }
 
 
+//High-level middleware to cache pages in memory.
+
+var cache = (duration) => {
+return (req, res, next) =>{
+    let key = '__express__' + req.originalUrl || req.url;
+    let cachedBody = mcache.get(key);
+    if(cachedBody){
+        res.send(cachedBody);
+        return;
+    } else {
+        res.sendResponse = res.send;
+        res.send = (body) =>{
+            mcache.put(key, body, duration * 1000);
+            res.sendResponse(body);
+        }
+     next();
+    }
+
+}
+}
+
+
+
+
 //Route to display weather data
 app.get('/weather', authenticateToken, async (req, res) =>{
     try {
@@ -199,8 +224,22 @@ try {
 });
 
 
+//Route to display API documentation
+app.get('/documentation', (req, res) => {
+
+    try {
+       res.render('documentation.ejs');
+    } catch (error) {
+       res.status(500).send('Server error.'); 
+    }
+
+});
+
+
+
+
 //Route to display all weather data in HTML by passing data variables
-app.get('/view', async (req, res) =>{
+app.get('/view', cache(100), async (req, res) =>{
 
     try {
 
@@ -399,7 +438,7 @@ req.session.destroy((err) =>{
 
 
 //Define the port number
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8080;
 
 
 //Start the server
