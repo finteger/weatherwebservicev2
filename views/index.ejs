@@ -94,7 +94,22 @@
   </form>
 
   <h2>Upload Weather Images</h2>
-  <form  action="/uploadphoto" enctype="multipart/form-data" method="POST">
-    <input id="uploader" type="file" name="myImage" accept="image/">
+  <form action="/uploadphoto" enctype="multipart/form-data" method="POST">
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name" required><br><br>
+    <label for="desc">Description:</label>
+    <input type="text" id="desc" name="desc" required><br><br>
+    <input type="file" name="myImage" accept="image/"><br><br>
     <input type="submit" value="Upload Photo">
   </form>
+  <br>
+  <h2>Upload Video</h2>
+  <form action="/uploadvideo" enctype="multipart/form-data" method="POST">
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name" required><br><br>
+    <label for="desc">Description:</label>
+    <input type="text" id="desc" name="desc" required><br><br>
+    <input type="file" name="myVideo" accept="video/*"><br><br>
+    <input type="submit" value="Upload Video">
+  </form>
+  

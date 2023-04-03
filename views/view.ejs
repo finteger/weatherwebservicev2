@@ -1,31 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
+  <style>
+button {
+			padding: 10px;
+			border: none;
+			background-color: #007bff;
+			color: #fff;
+			font-size: 16px;
+			cursor: pointer;
+		}
+		button:hover {
+			background-color: #0056b3;
+		}
+		#login-btn {
+			margin-right: 10px;
+		}
+    #alert{
+      background-color: red;
+      color: white;
+      padding: 20px;
+    }
+  </style>
 <head>
   <link rel="stylesheet" href="/style.css">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Weather Service</title>
-  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <div class="container">
     <h1 class="mt-3"><img id="logo" src="/images/download.png"><img>Weather Service</h1>
+    <a href="/login"><button id="login-btn">Login</button></a>
+		<a href="/register"><button id="register-btn">Register</button></a>
 
    
-     
-        <div>
-        <img src='data:image.jpeg;base64<%= image %>' style="height:200px;width:200px;"></img>  
+    
+    <h2 style="background:lightblue;padding:10px;width:100%;border-radius:10px;"><i class="fa-solid fa-bolt-lightning" style="color:yellow"></i>&nbsp;Latest Weather Uploads:</h2>
+    <div id="alert"><strong>ALERT:&nbsp;&nbsp;</strong>Travel advisory for central region and surrounding areas.  Please avoid non-essential travel.</div>
+
+    <div style="display: flex; justify-content: left; align-items: left; overflow-x: auto;margin:50px">
+      <% videos.forEach((video) => { %>
+        <div style="margin: 10px; padding: 10px; background-color: lightblue; border-radius: 25px;">
+          <video controls width="320" height="240" autoplay muted>
+            <source src="data:<%= video.contentType %>;base64,<%= video.data.toString('base64') %>" type="<%= video.contentType %>">
+          </video>
+                  
+          <div style="background-color: white; padding: 10px; border-radius: 25px; margin-top: 10px;">
+            <h2 style="text-align: center;"><%= video.name %></h2>
+            <p style="text-align: center;"><%= video.desc %></p>
+          </div>
         </div>
-   
+      <% }) %>
+    </div>
 
-
-
+    <div style="display:flex !important;margin:20px;overflow-x:scroll;overflow-y:hidden;">
+      <% images.forEach((image) => { %>
+        <img src='data:image.jpeg;base64,<%= image.data %>' style="border: 6px solid transparent;height:100px;width:100px;border-radius:25px;"></img>  
+      <% }) %>
+    </div>
     <div class="row mt-3">
       <% weatherData.forEach((data) => { %>
         <div class="col-md-4">
-          <div class="card" style="background-image:url('/images/<%= data.city.toLowerCase() %>.jpg');background-position:right;transition: background 300ms ease-in 200ms;">
+          <div class="card" style="background-image:url('/images/<%= data.city.toLowerCase() %>.jpg');background-size:cover;background-repeat: no-repeat;background-position:right;transition: background 300ms ease-in 200ms;">
             <div class="card-header">
               <%= data.city %>
             </div>

@@ -5,6 +5,7 @@ const Weather = require('./weather.js');
 const User = require('./user.js');
 const Session = require('./session.js');
 const Image = require('./image.js');
+const Video = require('./video.js');
 const ejs = require('ejs');
 const Joi = require('joi');
 const bcrypt = require('bcrypt');
@@ -92,7 +93,7 @@ app.post('/uploadphoto', upload.single('myImage'), (req, res) =>{
 
 const image = new Image({
     name: req.body.name,
-    desc: req.file.desc,
+    desc: req.body.desc,
     img: final_img,
     
 });
@@ -102,7 +103,42 @@ image.save();
 });
 
 
+//set storage for video
+var storageLocation = multer.diskStorage({
+    destination: function(req, file, cb) {
+        cb(null, 'videoUpload');
+    },
+    filename: function(req, file, cb){
+        cb(null, file.fieldname + '-' + Date.now())
+    }
+});
 
+var uploader = multer({storage: storageLocation});
+
+
+//Post route to read file, convert the img to a string, save img to database
+
+app.post('/uploadvideo', uploader.single('myVideo'), (req, res) =>{
+ var vid = fs.readFileSync(req.file.path);
+ var encode_vid = vid.toString('base64');
+ var final_vid = {
+    contentType: req.file.mimetype,
+    data: new Buffer.from(encode_vid, 'base64')
+ };
+
+
+//Save weather image upload
+
+const video = new Video({
+    name: req.body.name,
+    desc: req.body.desc,
+    vid: final_vid,
+    
+});
+
+video.save();
+
+});
 
 //High level middleware function that verifies jwt.  Authorized access if session info matches decoded token info.
 function authenticateToken(req, res, next){
@@ -127,9 +163,10 @@ function authenticateToken(req, res, next){
 
 
 //Route to display weather data
-app.get('/weather', async (req, res) =>{
+app.get('/weather', authenticateToken, async (req, res) =>{
     try {
       const weatherData = await Weather.find();
+      res.json(weatherData);
     } catch (error) {
     console.error(error);
     res.status(500).send('An error occurred while retrieving weather data.');
@@ -137,7 +174,7 @@ app.get('/weather', async (req, res) =>{
 });
 
 //Define route for weather tracker form
-app.get('/weathertracker',   (req, res) =>{
+app.get('/weathertracker', authenticateToken,  (req, res) =>{
 res.render('index.ejs');
 });
 
@@ -167,13 +204,27 @@ app.get('/view', async (req, res) =>{
 
     try {
 
-        const images = await Image.find();
-
-        const image = images[0].img.data;
-    
+        const imager = await Image.find();
+        const images = imager.map(image => {
+          return {
+            name: image.name,
+            desc: image.desc,
+            data: image.img.data.toString('base64')
+          };
+        });
+ 
+        const videor = await Video.find();
+        const videos = videor.map(video => {
+            return {
+              name: video.name,
+              desc: video.desc,
+              data: video.vid.data.toString('base64'),
+              contentType: video.vid.contentType
+            };
+          });
         const weatherData = await Weather.find();
 
-        res.render('view.ejs', { weatherData, image });
+        res.render('view.ejs', { weatherData, images, videos});
 
 
 
@@ -197,27 +248,43 @@ app.get('/api/all', async (req, res) =>{
     }
 
 });
-
-
-//Route to display all weather images
-app.get('/api/images', async (req, res) => {
-
+// Route to display all weather videos
+app.get('/api/videos', async (req, res) => {
     try {
-
-    const images = await Image.find();
-    const individualImage = images.map(images => {
-
-     res.header('Content-Type', images.img.contentType).send(images.img.data);
-     
-    });
-
-   
+      const videos = await Video.find();
+      const individualVideo = videos.map(video => {
+        const videoData = video.vid.data.toString('base64');
+        return {
+          contentType: video.vid.contentType,
+          data: videoData
+        };
+      });
+      res.json(individualVideo);
     } catch (error) {
-        console.error(error);
-        res.status(500).send('An error occurred while retrieving weather data.');
+      console.error(error);
+      res.status(500).send('An error occurred while retrieving weather data.');
     }
+  });
+  
+  // Route to display all weather images
+  app.get('/api/images', async (req, res) => {
+    try {
+      const images = await Image.find();
+      const individualImage = images.map(image => {
+        const imageData = image.img.data.toString('base64');
+        return {
+          contentType: image.img.contentType,
+          data: imageData
+        };
+      });
+      res.json(individualImage);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('An error occurred while retrieving weather data.');
+    }
+  });
+  
 
-});
 
 //Create a new register endpoint and display view
 app.get('/register', (req, res) =>{
