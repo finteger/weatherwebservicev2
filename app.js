@@ -9,6 +9,7 @@ const Video = require('./video.js');
 const ejs = require('ejs');
 const Joi = require('joi');
 const bcrypt = require('bcrypt');
+const rateLimit = require('express-rate-limit');
 const jwt = require('jsonwebtoken');
 const mcache = require('memory-cache');
 const cookieParser = require('cookie-parser');
@@ -140,6 +141,19 @@ const video = new Video({
 video.save();
 
 });
+
+
+//High-level middleware function to rate-limit API requests
+
+const apiLimiter = rateLimit({
+    windowsMS: 1 * 60 * 1000, //15 minutes
+    max: 2, 
+    standardHeaders: true, 
+    legacyHeaders: false,
+});
+
+
+
 
 //High level middleware function that verifies jwt.  Authorized access if session info matches decoded token info.
 function authenticateToken(req, res, next){
@@ -276,7 +290,7 @@ app.get('/view', cache(100), async (req, res) =>{
 
 
 //Route to display all weather data in JSON
-app.get('/api/all', async (req, res) =>{
+app.get('/api/all', apiLimiter,  async (req, res) =>{
 
     try {
         const weatherData = await Weather.find();
@@ -288,7 +302,7 @@ app.get('/api/all', async (req, res) =>{
 
 });
 // Route to display all weather videos
-app.get('/api/videos', async (req, res) => {
+app.get('/api/videos', apiLimiter,  async (req, res) => {
     try {
       const videos = await Video.find();
       const individualVideo = videos.map(video => {
@@ -306,7 +320,7 @@ app.get('/api/videos', async (req, res) => {
   });
   
   // Route to display all weather images
-  app.get('/api/images', async (req, res) => {
+  app.get('/api/images', apiLimiter,  async (req, res) => {
     try {
       const images = await Image.find();
       const individualImage = images.map(image => {
