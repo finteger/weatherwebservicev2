@@ -11,6 +11,7 @@ const Joi = require('joi');
 const bcrypt = require('bcrypt');
 const rateLimit = require('express-rate-limit');
 const jwt = require('jsonwebtoken');
+const axios = require('axios');
 const mcache = require('memory-cache');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
@@ -257,6 +258,21 @@ app.get('/view', cache(100), async (req, res) =>{
 
     try {
 
+        let data;
+        const access_token = 'ONOaTPRoDWOkcohZEjwkouOwIOHWrsFT';
+
+        axios.get('https://www.ncei.noaa.gov/cdo-web/api/v2/locations/CITY:US170006', {
+    
+        
+        headers: {
+            'token': `${access_token}`
+        }}).then(res => {
+            data = res.data;
+
+            console.log(data);
+        });
+
+
         const imager = await Image.find();
         const images = imager.map(image => {
           return {
@@ -277,7 +293,7 @@ app.get('/view', cache(100), async (req, res) =>{
           });
         const weatherData = await Weather.find();
 
-        res.render('view.ejs', { weatherData, images, videos});
+        res.render('view.ejs', { weatherData, images, videos, data });
 
 
 
@@ -452,7 +468,7 @@ req.session.destroy((err) =>{
 
 
 //Define the port number
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || 3000;
 
 
 //Start the server
